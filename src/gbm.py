@@ -93,6 +93,7 @@ def simulate_correlated_gbm_paths(
     n_steps: int,
     n_paths: int,
     seed: int | None = None,
+    eps: float = 1e-10,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Simulate correlated Geometric Brownian Motion (GBM) paths for multiple assets.
@@ -118,6 +119,7 @@ def simulate_correlated_gbm_paths(
         Volatility parameters for each asset (non-negative).
     corr_matrix : np.ndarray, shape (d, d)
         Symmetric positive semi-definite correlation matrix with ones on the diagonal.
+        PSD is accepted up to tolerance eps.
     T : float
         Time horizon (in years).
     n_steps : int
@@ -126,6 +128,9 @@ def simulate_correlated_gbm_paths(
         Number of simulated paths.
     seed : int or None, optional
         Random seed for reproducibility.
+    eps : float, optional
+        Tolerance for PSD checks. Eigenvalues below -eps are rejected; values in
+        [-eps, 0] are clamped to 0. Default is 1e-10.
 
     Returns
     -------
@@ -151,6 +156,8 @@ def simulate_correlated_gbm_paths(
         raise ValueError("n_paths must be a positive integer.")
     if T <= 0:
         raise ValueError("T must be positive.")
+    if eps < 0:
+        raise ValueError("eps must be non-negative.")
     if np.any(S0 <= 0):
         raise ValueError("All entries of S0 must be positive.")
     if np.any(sigma < 0):
@@ -162,11 +169,12 @@ def simulate_correlated_gbm_paths(
     if not np.allclose(np.diag(corr_matrix), 1.0, atol=1e-8):
         raise ValueError("corr_matrix must have ones on the diagonal.")
 
-    # Cholesky decomposition for correlation
-    try:
-        L = np.linalg.cholesky(corr_matrix)
-    except np.linalg.LinAlgError as e:
-        raise ValueError("corr_matrix must be positive semi-definite for Cholesky.") from e
+    # Eigenvalue-based factorization for PSD correlation matrices
+    eigvals, eigvecs = np.linalg.eigh(corr_matrix)
+    if np.any(eigvals < -eps):
+        raise ValueError("corr_matrix must be positive semi-definite within eps tolerance.")
+    eigvals_clamped = np.where(eigvals < 0.0, 0.0, eigvals)
+    L = eigvecs @ np.diag(np.sqrt(eigvals_clamped))
 
     rng = np.random.default_rng(seed)
 
@@ -199,6 +207,7 @@ def simulate_correlated_gbm_paths(
 
     paths = np.exp(log_paths)
     return t_grid, paths
+
 
 def simulate_gbm_terminal(
     S0: float,

@@ -54,8 +54,8 @@ def test_gbm_mean_and_variance_close_to_theory():
     theo_var = (S0**2) * np.exp(2 * mu * T) * (np.exp(sigma**2 * T) - 1.0)
 
     # Tolerances consistent with Monte Carlo error
-    assert np.isclose(emp_mean, theo_mean, rtol=0.02)   # 2% relative error
-    assert np.isclose(emp_var, theo_var, rtol=0.05)     # 5% relative error
+    assert np.isclose(emp_mean, theo_mean, rtol=0.02)  # 2% relative error
+    assert np.isclose(emp_var, theo_var, rtol=0.05)  # 5% relative error
 
 
 def test_gbm_reproducibility_with_seed():
@@ -140,8 +140,7 @@ def test_correlated_gbm_empirical_correlation():
     S0 = np.array([100.0, 100.0])
     mu = np.array([0.05, 0.03])
     sigma = np.array([0.2, 0.25])
-    corr_matrix = np.array([[1.0, 0.7],
-                            [0.7, 1.0]])
+    corr_matrix = np.array([[1.0, 0.7], [0.7, 1.0]])
 
     T = 1.0
     n_steps = 252
@@ -159,8 +158,8 @@ def test_correlated_gbm_empirical_correlation():
     )
 
     # Use simple returns over the whole horizon
-    S_T = paths[:, -1, :]         # shape (n_paths, 2)
-    R_T = S_T / S0 - 1.0          # shape (n_paths, 2)
+    S_T = paths[:, -1, :]  # shape (n_paths, 2)
+    R_T = S_T / S0 - 1.0  # shape (n_paths, 2)
 
     emp_corr = np.corrcoef(R_T.T)  # 2x2 empirical correlation matrix
 
@@ -169,3 +168,49 @@ def test_correlated_gbm_empirical_correlation():
     assert np.isclose(emp_corr[1, 1], 1.0, rtol=1e-3)
     assert np.isclose(emp_corr[0, 1], corr_matrix[0, 1], rtol=0.05)
     assert np.isclose(emp_corr[1, 0], corr_matrix[1, 0], rtol=0.05)
+
+
+def test_correlated_gbm_singular_corr_matrix_runs():
+    # Perfectly correlated assets (singular PSD correlation matrix).
+    S0 = np.array([100.0, 100.0])
+    mu = np.array([0.02, 0.02])
+    sigma = np.array([0.1, 0.1])
+    corr_matrix = np.array([[1.0, 1.0], [1.0, 1.0]])
+
+    _, paths = simulate_correlated_gbm_paths(
+        S0=S0,
+        mu=mu,
+        sigma=sigma,
+        corr_matrix=corr_matrix,
+        T=1.0,
+        n_steps=252,
+        n_paths=30_000,
+        seed=7,
+    )
+
+    S_T = paths[:, -1, :]
+    R_T = S_T / S0 - 1.0
+    emp_corr = np.corrcoef(R_T.T)
+
+    assert np.isclose(emp_corr[0, 1], 1.0, rtol=0.02)
+    assert np.isclose(emp_corr[1, 0], 1.0, rtol=0.02)
+
+
+def test_correlated_gbm_rejects_non_psd_corr_matrix():
+    S0 = np.array([100.0, 100.0])
+    mu = np.array([0.02, 0.02])
+    sigma = np.array([0.1, 0.1])
+    # Eigenvalues are 3 and -1 -> not PSD.
+    corr_matrix = np.array([[1.0, 2.0], [2.0, 1.0]])
+
+    with np.testing.assert_raises(ValueError):
+        simulate_correlated_gbm_paths(
+            S0=S0,
+            mu=mu,
+            sigma=sigma,
+            corr_matrix=corr_matrix,
+            T=1.0,
+            n_steps=10,
+            n_paths=1_000,
+            seed=1,
+        )

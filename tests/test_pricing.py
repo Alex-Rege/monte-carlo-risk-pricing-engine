@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from src.options import payoff_call, payoff_put
+from src.payoffs import payoff_call, payoff_put
 from src.pricing import (
     black_scholes_call,
     black_scholes_put,
@@ -120,18 +120,125 @@ def test_mc_reproducibility_same_seed():
     assert res1.confidence == res2.confidence
 
 
-
 def test_mc_raises_on_too_few_paths():
     with pytest.raises(ValueError):
         _ = mc_european_call(
-            S0=100.0, K=100.0, T=1.0, r=0.03, sigma=0.2,
-            n_steps=10, n_paths=1, seed=1, return_details=True
+            S0=100.0,
+            K=100.0,
+            T=1.0,
+            r=0.03,
+            sigma=0.2,
+            n_steps=10,
+            n_paths=1,
+            seed=1,
+            return_details=True,
         )
+
 
 def test_mc_runtime_is_reported():
     res = mc_european_call(
-        S0=100.0, K=100.0, T=1.0, r=0.03, sigma=0.2,
-        n_steps=10, n_paths=10_000, seed=1, return_details=True
+        S0=100.0,
+        K=100.0,
+        T=1.0,
+        r=0.03,
+        sigma=0.2,
+        n_steps=10,
+        n_paths=10_000,
+        seed=1,
+        return_details=True,
     )
     assert res.runtime is not None
     assert res.runtime >= 0.0
+
+
+@pytest.mark.parametrize("variance_reduction", ["antithetic", "control_variate"])
+def test_mc_variance_reduction_unbiased_call(variance_reduction):
+    S0 = 100.0
+    K = 100.0
+    T = 1.0
+    r = 0.02
+    sigma = 0.2
+    n_steps = 252
+    n_paths = 100_000
+
+    bs = black_scholes_call(S0, K, T, r, sigma)
+    res = mc_european_call(
+        S0,
+        K,
+        T,
+        r,
+        sigma,
+        n_steps,
+        n_paths,
+        seed=123,
+        variance_reduction=variance_reduction,
+        return_details=True,
+    )
+
+    assert abs(res.price - bs) <= 3.0 * res.stderr
+
+
+def test_variance_reduction_reduces_variance():
+    S0 = 100.0
+    K = 105.0
+    T = 1.0
+    r = 0.01
+    sigma = 0.25
+    n_steps = 100
+    n_paths = 10_000
+
+    seeds = range(10)
+    prices_plain = []
+    prices_anti = []
+    prices_cv = []
+
+    for seed in seeds:
+        prices_plain.append(
+            mc_european_call(
+                S0,
+                K,
+                T,
+                r,
+                sigma,
+                n_steps,
+                n_paths,
+                seed=seed,
+                variance_reduction="none",
+                return_details=False,
+            )
+        )
+        prices_anti.append(
+            mc_european_call(
+                S0,
+                K,
+                T,
+                r,
+                sigma,
+                n_steps,
+                n_paths,
+                seed=seed,
+                variance_reduction="antithetic",
+                return_details=False,
+            )
+        )
+        prices_cv.append(
+            mc_european_call(
+                S0,
+                K,
+                T,
+                r,
+                sigma,
+                n_steps,
+                n_paths,
+                seed=seed,
+                variance_reduction="control_variate",
+                return_details=False,
+            )
+        )
+
+    var_plain = float(np.var(prices_plain, ddof=1))
+    var_anti = float(np.var(prices_anti, ddof=1))
+    var_cv = float(np.var(prices_cv, ddof=1))
+
+    assert var_anti <= 0.9 * var_plain
+    assert var_cv <= 0.9 * var_plain

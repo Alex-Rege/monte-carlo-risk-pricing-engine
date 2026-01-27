@@ -18,7 +18,6 @@ class MCResult:
     runtime: float | None = None
 
 
-
 def time_call(func: Callable[..., Any], *args, **kwargs):
     """
     Measure execution time of a function call.

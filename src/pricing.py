@@ -5,8 +5,9 @@ import numpy as np
 from scipy.stats import norm
 
 from src.gbm import simulate_gbm_terminal
-from src.options import payoff_call, payoff_put
+from src.payoffs import payoff_call, payoff_put
 from src.utils import MCResult, time_call
+
 
 def _validate_mc_inputs(S0: float, K: float, T: float, sigma: float, n_paths: int):
     if S0 <= 0:
@@ -20,6 +21,65 @@ def _validate_mc_inputs(S0: float, K: float, T: float, sigma: float, n_paths: in
     if n_paths < 2:
         raise ValueError("n_paths must be >= 2.")
 
+
+def _validate_variance_reduction(variance_reduction: str) -> str:
+    if variance_reduction is None:
+        return "none"
+    variance_reduction = str(variance_reduction).lower()
+    allowed = {"none", "antithetic", "control_variate"}
+    if variance_reduction not in allowed:
+        raise ValueError(f"variance_reduction must be one of {sorted(allowed)}.")
+    return variance_reduction
+
+
+def _discounted_payoffs_terminal(
+    S0: float,
+    K: float,
+    T: float,
+    r: float,
+    sigma: float,
+    n_paths: int,
+    seed: int | None,
+    payoff_fn,
+    variance_reduction: str,
+) -> np.ndarray:
+    variance_reduction = _validate_variance_reduction(variance_reduction)
+    if variance_reduction == "none":
+        S_T = simulate_gbm_terminal(S0, r, sigma, T, n_paths, seed=seed)
+        payoffs = payoff_fn(S_T, K)
+        return np.exp(-r * T) * payoffs
+
+    if variance_reduction == "antithetic":
+        rng = np.random.default_rng(seed)
+        n_pairs = n_paths // 2
+        Z = rng.standard_normal(size=n_pairs)
+        drift = (r - 0.5 * sigma**2) * T
+        diffusion = sigma * np.sqrt(T) * Z
+        S_pos = S0 * np.exp(drift + diffusion)
+        S_neg = S0 * np.exp(drift - diffusion)
+        pair_payoffs = 0.5 * (payoff_fn(S_pos, K) + payoff_fn(S_neg, K))
+
+        if n_paths % 2 == 1:
+            Z_extra = rng.standard_normal(size=1)
+            S_extra = S0 * np.exp(drift + sigma * np.sqrt(T) * Z_extra)
+            extra_payoff = payoff_fn(S_extra, K)
+            payoffs = np.concatenate([pair_payoffs, extra_payoff])
+        else:
+            payoffs = pair_payoffs
+
+        return np.exp(-r * T) * payoffs
+
+    # Control variate: use discounted underlying as control with known expectation S0.
+    S_T = simulate_gbm_terminal(S0, r, sigma, T, n_paths, seed=seed)
+    payoffs = payoff_fn(S_T, K)
+    discounted = np.exp(-r * T) * payoffs
+    control = np.exp(-r * T) * S_T
+    control_var = float(control.var(ddof=1))
+    if control_var == 0.0:
+        return discounted
+    cov = float(np.cov(discounted, control, ddof=1)[0, 1])
+    b_opt = cov / control_var
+    return discounted - b_opt * (control - S0)
 
 
 def black_scholes_call(S0: float, K: float, T: float, r: float, sigma: float) -> float:
@@ -90,7 +150,6 @@ def _mc_price_from_terminal_payoffs(
     return price, var, stderr, ci
 
 
-
 def mc_european_call(
     S0: float,
     K: float,
@@ -101,12 +160,14 @@ def mc_european_call(
     n_paths: int,
     seed: int | None = None,
     confidence: float = 0.95,
+    variance_reduction: str = "none",
     return_details: bool = True,
 ) -> MCResult | float:
     """
     Monte Carlo price of a European call under risk-neutral GBM (drift = r).
 
     Returns MCResult by default; set return_details=False to return just the price.
+    variance_reduction: "none" | "antithetic" | "control_variate".
     """
     _validate_mc_inputs(S0, K, T, sigma, n_paths)
 
@@ -124,12 +185,18 @@ def mc_european_call(
         )
         return result if return_details else result.price
 
-    S_T, runtime = time_call(
-        simulate_gbm_terminal, S0, r, sigma, T, n_paths, seed=seed
+    discounted, runtime = time_call(
+        _discounted_payoffs_terminal,
+        S0,
+        K,
+        T,
+        r,
+        sigma,
+        n_paths,
+        seed,
+        payoff_call,
+        variance_reduction,
     )
-
-    payoffs = payoff_call(S_T, K)
-    discounted = np.exp(-r * T) * payoffs
 
     price, var, stderr, ci = _mc_price_from_terminal_payoffs(discounted, confidence=confidence)
     result = MCResult(
@@ -145,7 +212,6 @@ def mc_european_call(
     return result if return_details else result.price
 
 
-
 def mc_european_put(
     S0: float,
     K: float,
@@ -156,12 +222,14 @@ def mc_european_put(
     n_paths: int,
     seed: int | None = None,
     confidence: float = 0.95,
+    variance_reduction: str = "none",
     return_details: bool = True,
 ) -> MCResult | float:
     """
     Monte Carlo price of a European put under risk-neutral GBM (drift = r).
 
     Returns MCResult by default; set return_details=False to return just the price.
+    variance_reduction: "none" | "antithetic" | "control_variate".
     """
     _validate_mc_inputs(S0, K, T, sigma, n_paths)
 
@@ -179,12 +247,18 @@ def mc_european_put(
         )
         return result if return_details else result.price
 
-    S_T, runtime = time_call(
-        simulate_gbm_terminal, S0, r, sigma, T, n_paths, seed=seed
+    discounted, runtime = time_call(
+        _discounted_payoffs_terminal,
+        S0,
+        K,
+        T,
+        r,
+        sigma,
+        n_paths,
+        seed,
+        payoff_put,
+        variance_reduction,
     )
-
-    payoffs = payoff_put(S_T, K)
-    discounted = np.exp(-r * T) * payoffs
 
     price, var, stderr, ci = _mc_price_from_terminal_payoffs(discounted, confidence=confidence)
     result = MCResult(
@@ -198,4 +272,3 @@ def mc_european_put(
     )
 
     return result if return_details else result.price
-
