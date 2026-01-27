@@ -23,9 +23,8 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Data and figures (optional)
+# Data (optional). Figures are now tracked.
 data/
-figures/
 
 # Logs
 *.log
