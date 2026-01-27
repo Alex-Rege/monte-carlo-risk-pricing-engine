@@ -74,7 +74,7 @@ Notebook `notebooks/00_core_validation.ipynb` is the primary entry point and pro
 * **PDE pricing benchmark (finite differences)**  
   A Crank–Nicolson finite-difference solver for the Black–Scholes PDE is used as an independent benchmark. PDE prices and sensitivities are compared against both closed-form and Monte Carlo results, with diagnostics highlighting discretization error, grid convergence, and payoff non-smoothness effects.
 
-All figures generated in this notebook are saved under `figures/notebooks/00_core_validation/` and serve as the quantitative credibility backbone of the project.
+All figures generated in this notebook are saved under `figures/00_core_validation/` and serve as the quantitative credibility backbone of the project.
 
 Continuous integration runs `pytest` (unit tests) and `ruff` (lint/format) on every push or pull request.
 
