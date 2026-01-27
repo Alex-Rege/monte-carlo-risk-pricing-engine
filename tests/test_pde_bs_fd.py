@@ -5,7 +5,9 @@ from src.pde_bs_fd import price_bs_pde_cn
 from src.pricing import black_scholes_call, black_scholes_put
 
 
-@pytest.mark.parametrize("option_type, bs_fn", [("call", black_scholes_call), ("put", black_scholes_put)])
+@pytest.mark.parametrize(
+    "option_type, bs_fn", [("call", black_scholes_call), ("put", black_scholes_put)]
+)
 @pytest.mark.parametrize("T", [0.5, 1.0])
 @pytest.mark.parametrize("K", [80.0, 100.0, 120.0])
 def test_pde_matches_black_scholes(option_type, bs_fn, T, K):

@@ -131,11 +131,7 @@ def solve_bs_pde_cn(
         V[0] = bc_low_next
         V[-1] = bc_high_next
 
-        rhs = (
-            lower_rhs * V[:-2]
-            + diag_rhs * V[1:-1]
-            + upper_rhs * V[2:]
-        )
+        rhs = lower_rhs * V[:-2] + diag_rhs * V[1:-1] + upper_rhs * V[2:]
 
         bc_low, bc_high = _boundary_values(option_type, K, r, T, t, S_max)
         rhs[0] -= lower[0] * bc_low

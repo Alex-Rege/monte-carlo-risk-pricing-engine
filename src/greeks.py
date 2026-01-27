@@ -32,7 +32,9 @@ def _validate_variance_reduction(variance_reduction: str) -> str:
     return variance_reduction
 
 
-def _greek_stats(values: np.ndarray, confidence: float = 0.95) -> tuple[float, float, float, tuple[float, float]]:
+def _greek_stats(
+    values: np.ndarray, confidence: float = 0.95
+) -> tuple[float, float, float, tuple[float, float]]:
     x = np.asarray(values, dtype=float)
     n = x.size
     if n < 2:
@@ -52,7 +54,9 @@ def _gbm_terminal_from_z(S0: float, r: float, sigma: float, T: float, Z: np.ndar
     return S0 * np.exp(drift + diffusion)
 
 
-def _apply_control_variate(values: np.ndarray, control: np.ndarray, control_mean: float) -> np.ndarray:
+def _apply_control_variate(
+    values: np.ndarray, control: np.ndarray, control_mean: float
+) -> np.ndarray:
     control_var = float(control.var(ddof=1))
     if control_var == 0.0:
         return values
@@ -150,13 +154,11 @@ def _fd_greek_values(
             down_neg = payoffs_for_z(S0 - bump, sigma, Z_neg)
             mid_pos = payoffs_for_z(S0, sigma, Z) if include_mid else None
             mid_neg = payoffs_for_z(S0, sigma, Z_neg) if include_mid else None
-            up_extra = (
-                payoffs_for_z(S0 + bump, sigma, Z_extra) if Z_extra is not None else None
+            up_extra = payoffs_for_z(S0 + bump, sigma, Z_extra) if Z_extra is not None else None
+            down_extra = payoffs_for_z(S0 - bump, sigma, Z_extra) if Z_extra is not None else None
+            mid_extra = (
+                payoffs_for_z(S0, sigma, Z_extra) if include_mid and Z_extra is not None else None
             )
-            down_extra = (
-                payoffs_for_z(S0 - bump, sigma, Z_extra) if Z_extra is not None else None
-            )
-            mid_extra = payoffs_for_z(S0, sigma, Z_extra) if include_mid and Z_extra is not None else None
         else:
             up_pos = payoffs_for_z(S0, sigma + bump, Z)
             down_pos = payoffs_for_z(S0, sigma - bump, Z)
@@ -164,13 +166,11 @@ def _fd_greek_values(
             down_neg = payoffs_for_z(S0, sigma - bump, Z_neg)
             mid_pos = payoffs_for_z(S0, sigma, Z) if include_mid else None
             mid_neg = payoffs_for_z(S0, sigma, Z_neg) if include_mid else None
-            up_extra = (
-                payoffs_for_z(S0, sigma + bump, Z_extra) if Z_extra is not None else None
+            up_extra = payoffs_for_z(S0, sigma + bump, Z_extra) if Z_extra is not None else None
+            down_extra = payoffs_for_z(S0, sigma - bump, Z_extra) if Z_extra is not None else None
+            mid_extra = (
+                payoffs_for_z(S0, sigma, Z_extra) if include_mid and Z_extra is not None else None
             )
-            down_extra = (
-                payoffs_for_z(S0, sigma - bump, Z_extra) if Z_extra is not None else None
-            )
-            mid_extra = payoffs_for_z(S0, sigma, Z_extra) if include_mid and Z_extra is not None else None
 
         up = _antithetic_values(up_pos, up_neg, up_extra)
         down = _antithetic_values(down_pos, down_neg, down_extra)
@@ -330,9 +330,7 @@ def delta_pathwise_call(
     variance_reduction: str = "none",
     return_details: bool = True,
 ) -> GreekResult | float:
-    values = _pathwise_delta_values(
-        S0, K, T, r, sigma, n_paths, seed, "call", variance_reduction
-    )
+    values = _pathwise_delta_values(S0, K, T, r, sigma, n_paths, seed, "call", variance_reduction)
     estimate, var, stderr, ci = _greek_stats(values, confidence=confidence)
     result = GreekResult(
         estimate=estimate,
@@ -358,9 +356,7 @@ def delta_pathwise_put(
     variance_reduction: str = "none",
     return_details: bool = True,
 ) -> GreekResult | float:
-    values = _pathwise_delta_values(
-        S0, K, T, r, sigma, n_paths, seed, "put", variance_reduction
-    )
+    values = _pathwise_delta_values(S0, K, T, r, sigma, n_paths, seed, "put", variance_reduction)
     estimate, var, stderr, ci = _greek_stats(values, confidence=confidence)
     result = GreekResult(
         estimate=estimate,
@@ -387,9 +383,7 @@ def delta_fd_call(
     variance_reduction: str = "none",
     return_details: bool = True,
 ) -> GreekResult | float:
-    values = _fd_delta(
-        S0, K, T, r, sigma, n_paths, seed, bump, payoff_call, variance_reduction
-    )
+    values = _fd_delta(S0, K, T, r, sigma, n_paths, seed, bump, payoff_call, variance_reduction)
     estimate, var, stderr, ci = _greek_stats(values, confidence=confidence)
     result = GreekResult(
         estimate=estimate,
@@ -416,9 +410,7 @@ def delta_fd_put(
     variance_reduction: str = "none",
     return_details: bool = True,
 ) -> GreekResult | float:
-    values = _fd_delta(
-        S0, K, T, r, sigma, n_paths, seed, bump, payoff_put, variance_reduction
-    )
+    values = _fd_delta(S0, K, T, r, sigma, n_paths, seed, bump, payoff_put, variance_reduction)
     estimate, var, stderr, ci = _greek_stats(values, confidence=confidence)
     result = GreekResult(
         estimate=estimate,
@@ -445,9 +437,7 @@ def vega_fd_call(
     variance_reduction: str = "none",
     return_details: bool = True,
 ) -> GreekResult | float:
-    values = _fd_vega(
-        S0, K, T, r, sigma, n_paths, seed, bump, payoff_call, variance_reduction
-    )
+    values = _fd_vega(S0, K, T, r, sigma, n_paths, seed, bump, payoff_call, variance_reduction)
     estimate, var, stderr, ci = _greek_stats(values, confidence=confidence)
     result = GreekResult(
         estimate=estimate,
@@ -474,9 +464,7 @@ def vega_fd_put(
     variance_reduction: str = "none",
     return_details: bool = True,
 ) -> GreekResult | float:
-    values = _fd_vega(
-        S0, K, T, r, sigma, n_paths, seed, bump, payoff_put, variance_reduction
-    )
+    values = _fd_vega(S0, K, T, r, sigma, n_paths, seed, bump, payoff_put, variance_reduction)
     estimate, var, stderr, ci = _greek_stats(values, confidence=confidence)
     result = GreekResult(
         estimate=estimate,
@@ -503,9 +491,7 @@ def gamma_fd_call(
     variance_reduction: str = "none",
     return_details: bool = True,
 ) -> GreekResult | float:
-    values = _fd_gamma(
-        S0, K, T, r, sigma, n_paths, seed, bump, payoff_call, variance_reduction
-    )
+    values = _fd_gamma(S0, K, T, r, sigma, n_paths, seed, bump, payoff_call, variance_reduction)
     estimate, var, stderr, ci = _greek_stats(values, confidence=confidence)
     result = GreekResult(
         estimate=estimate,
@@ -532,9 +518,7 @@ def gamma_fd_put(
     variance_reduction: str = "none",
     return_details: bool = True,
 ) -> GreekResult | float:
-    values = _fd_gamma(
-        S0, K, T, r, sigma, n_paths, seed, bump, payoff_put, variance_reduction
-    )
+    values = _fd_gamma(S0, K, T, r, sigma, n_paths, seed, bump, payoff_put, variance_reduction)
     estimate, var, stderr, ci = _greek_stats(values, confidence=confidence)
     result = GreekResult(
         estimate=estimate,

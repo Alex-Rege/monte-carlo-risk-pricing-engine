@@ -58,15 +58,9 @@ def test_greeks_close_to_black_scholes():
     bs_vega_val = bs_vega(S0, K, T, r, sigma)
     bs_gamma_val = bs_gamma(S0, K, T, r, sigma)
 
-    delta_res = delta_pathwise_call(
-        S0, K, T, r, sigma, n_paths, seed=11, return_details=True
-    )
-    vega_res = vega_fd_call(
-        S0, K, T, r, sigma, n_paths, seed=11, return_details=True
-    )
-    gamma_res = gamma_fd_call(
-        S0, K, T, r, sigma, n_paths, seed=11, bump=0.5, return_details=True
-    )
+    delta_res = delta_pathwise_call(S0, K, T, r, sigma, n_paths, seed=11, return_details=True)
+    vega_res = vega_fd_call(S0, K, T, r, sigma, n_paths, seed=11, return_details=True)
+    gamma_res = gamma_fd_call(S0, K, T, r, sigma, n_paths, seed=11, bump=0.5, return_details=True)
 
     assert abs(delta_res.estimate - bs_delta) <= 3.0 * delta_res.stderr
     assert abs(vega_res.estimate - bs_vega_val) <= 3.0 * vega_res.stderr
