@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from src.greeks import (
     bs_delta_call,
