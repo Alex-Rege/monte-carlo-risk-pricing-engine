@@ -94,9 +94,7 @@ def compute_daily_features(daily: pd.DataFrame) -> pd.DataFrame:
     valid_mask = (data["price"] > 0) & (prev_price > 0)
     data["ret_1d"] = np.where(valid_mask, np.log(data["price"] / prev_price), np.nan)
     for window in (20, 60, 252):
-        data[f"vol_{window}d"] = (
-            data["ret_1d"].rolling(window=window).std() * np.sqrt(252.0)
-        )
+        data[f"vol_{window}d"] = data["ret_1d"].rolling(window=window).std() * np.sqrt(252.0)
     data["month"] = data["date"].dt.month
     data["day_of_week"] = data["date"].dt.dayofweek
 
@@ -144,14 +142,10 @@ def resample_monthly_prices(daily: pd.DataFrame) -> pd.DataFrame:
 def compute_monthly_features(monthly: pd.DataFrame) -> pd.DataFrame:
     data = monthly.copy()
     for window in (3, 12):
-        data[f"vol_{window}m"] = (
-            data["ret_1m"].rolling(window=window).std() * np.sqrt(12.0)
-        )
+        data[f"vol_{window}m"] = data["ret_1m"].rolling(window=window).std() * np.sqrt(12.0)
     data["month"] = data["date"].dt.month
     data["quarter"] = data["date"].dt.quarter
-    return data[
-        ["date", "price", "ret_1m", "vol_3m", "vol_12m", "month", "quarter"]
-    ]
+    return data[["date", "price", "ret_1m", "vol_3m", "vol_12m", "month", "quarter"]]
 
 
 def write_dataframe_csv(data: pd.DataFrame, path: Path) -> Path:
