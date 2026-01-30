@@ -1,0 +1,12 @@
+{
+  "actual_max_date": "2026-01-26",
+  "actual_min_date": "2000-01-04",
+  "missing_price_count": 265,
+  "output_filename": "fred_DCOILWTICO_2000-01-01_to_2026-01-30_2026-01-30T154944Z.csv",
+  "pull_timestamp": "2026-01-30T15:49:44.579217+00:00",
+  "requested_end": "2026-01-30",
+  "requested_start": "2000-01-01",
+  "row_count": 6800,
+  "series_id": "DCOILWTICO",
+  "source": "FRED"
+}

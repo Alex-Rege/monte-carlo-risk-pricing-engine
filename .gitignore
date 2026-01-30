@@ -24,7 +24,7 @@ Thumbs.db
 .idea/
 
 # Data (optional). Figures are now tracked.
-data/
+# data/
 
 # Logs
 *.log
