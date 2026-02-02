@@ -6,3 +6,5 @@ jupyter
 pytest
 seaborn
 ruff
+
+requests

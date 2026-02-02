@@ -37,12 +37,12 @@ The project follows a layered structure: a **core engine** complemented by **app
   Capital quantiles (VaR/ES), correlation stress impacts, estimation uncertainty, and explicit model-risk framing using alternative assumptions and benchmarks.
 
 - **Energy trading / commodities**  
-  → `40_commodity_vol_and_seasonality.ipynb` (PLANNED)  
-  Empirical analysis of commodity volatility, seasonality, and regime effects using real data, linked back to Monte Carlo pricing and risk metrics.
+  → `40_commodity_vol_and_seasonality.ipynb`  
+  Empirical analysis of WTI crude oil volatility, seasonality, and regime effects using FRED data, linked back to Monte Carlo pricing and risk metrics.
 
 - **Crypto markets / short-dated options / model limits**  
-  → `50_crypto_short_dated_options.ipynb` (PLANNED)  
-  Short-horizon volatility instability, heavy tails, and tail risk in crypto assets, highlighting where diffusion-based Monte Carlo models break down.
+  → `50_crypto_short_dated_options.ipynb`  
+  BTC short-horizon volatility instability, tail diagnostics vs Normal/GBM baselines, and calibration-window sensitivity using Binance spot data.
 
 ---
 
@@ -139,10 +139,9 @@ jupyter lab notebooks/00_core_validation.ipynb
   Capital quantiles (VaR/ES across confidence levels), correlation stress impacts, and estimation uncertainty (e.g. via repeated simulations). Includes explicit model-risk framing by comparing outputs under alternative parameter assumptions and benchmarks.
 
 * `40_commodity_vol_and_seasonality.ipynb`  
-  **Energy trading, commodities, real-data diagnostics. (PLANNED)**  
-  Analysis of commodity return volatility, seasonality patterns, and regime proxies using public market data. Links empirical regime-dependent volatility back to Monte Carlo pricing and risk estimates.
+  **Energy trading, commodities, real-data diagnostics.**  
+  Analysis of WTI crude oil (FRED `DCOILWTICO`) return volatility, seasonality patterns, and regime proxies. Includes rolling volatility, seasonality diagnostics, and regime labeling with links back to Monte Carlo pricing and risk estimates. Data details: `data/README.md`. Pull script: `scripts/pull_commodity_data.py`.
 
 * `50_crypto_short_dated_options.ipynb`  
-  **Crypto markets, short-dated risk, model breakdown. (PLANNED)**  
-  Empirical volatility instability, heavy tails, and short-horizon risk in crypto assets. Compares diffusion-based Monte Carlo assumptions against observed behavior, highlighting limitations rather than overstating model fit.
-
+  **Crypto markets, short-dated risk, model breakdown.**  
+  Uses BTC spot data from Binance (daily + hourly) to show volatility instability, tail exceedance vs Normal/GBM baselines, and calibration-window sensitivity. Includes rolling no-look-ahead calibration, short-horizon MC VaR/ES across evaluation dates, empirical vs MC tail risk comparisons, and lightweight coverage and sigma-shock stress diagnostics. Data details: `data/README.md`. Pull script: `scripts/pull_crypto_data.py`.

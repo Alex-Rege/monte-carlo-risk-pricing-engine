@@ -1,0 +1,27 @@
+{
+  "intervals": {
+    "1d": {
+      "actual_max_timestamp": "2026-02-02T00:00:00+00:00",
+      "actual_min_timestamp": "2017-08-17T00:00:00+00:00",
+      "duplicate_count": 0,
+      "interval": "1d",
+      "output_filename": "binance_BTCUSDT_1d_2017-01-01_to_2026-02-02_2026-02-02T134722Z.csv",
+      "requested_end": "2026-02-02",
+      "requested_start": "2017-01-01",
+      "row_count": 3092
+    },
+    "1h": {
+      "actual_max_timestamp": "2026-02-02T13:00:00+00:00",
+      "actual_min_timestamp": "2017-08-17T04:00:00+00:00",
+      "duplicate_count": 0,
+      "interval": "1h",
+      "output_filename": "binance_BTCUSDT_1h_2017-01-01_to_2026-02-02_2026-02-02T134722Z.csv",
+      "requested_end": "2026-02-02",
+      "requested_start": "2017-01-01",
+      "row_count": 74066
+    }
+  },
+  "pull_timestamp_utc": "2026-02-02T13:47:22.630185+00:00",
+  "source": "Binance",
+  "symbol": "BTCUSDT"
+}

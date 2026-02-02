@@ -1,0 +1,7 @@
+{
+  "actual_count": 74066,
+  "expected_count": 74194,
+  "first_timestamp": "2017-08-17T04:00:00+00:00",
+  "last_timestamp": "2026-02-02T13:00:00+00:00",
+  "missing_count": 128
+}
