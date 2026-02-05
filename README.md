@@ -44,6 +44,10 @@ The project follows a layered structure: a **core engine** complemented by **app
   → `50_crypto_short_dated_options.ipynb`  
   BTC short-horizon volatility instability, tail diagnostics vs Normal/GBM baselines, and calibration-window sensitivity using Binance spot data.
 
+- **Stochastic volatility / volatility surfaces / skew**  
+  → `60_heston_smile_and_surface.ipynb`  
+  Heston stochastic volatility Monte Carlo with QE scheme, implied-volatility smiles at fixed maturities, full smile surface (heatmap), and parameter-sensitivity intuition (rho, xi, kappa/theta). Qualitative and diagnostic; not a calibration workflow.
+
 ---
 
 ## Core validation
@@ -145,3 +149,7 @@ jupyter lab notebooks/00_core_validation.ipynb
 * `50_crypto_short_dated_options.ipynb`  
   **Crypto markets, short-dated risk, model breakdown.**  
   Uses BTC spot data from Binance (daily + hourly) to show volatility instability, tail exceedance vs Normal/GBM baselines, and calibration-window sensitivity. Includes rolling no-look-ahead calibration, short-horizon MC VaR/ES across evaluation dates, empirical vs MC tail risk comparisons, and lightweight coverage and sigma-shock stress diagnostics. Data details: `data/README.md`. Pull script: `scripts/pull_crypto_data.py`.
+
+* `60_heston_smile_and_surface.ipynb`  
+  **Stochastic volatility, smile/surface diagnostics.**  
+  Heston stochastic volatility Monte Carlo (QE scheme) with implied-volatility smiles and a maturity/strike surface heatmap. Includes parameter-sensitivity intuition (e.g., rho skew, xi curvature, kappa/theta term structure). Qualitative diagnostics only; no calibration.
